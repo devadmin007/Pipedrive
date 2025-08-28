@@ -129,7 +129,7 @@ router.get('/:id', async (req, res) => {
     //     message: `User ${req.user.id} is not authorized to access this lead`
     //   });
     // }
-    
+
     res.status(200).json({
       success: true,
       data: lead
@@ -148,63 +148,57 @@ router.get('/:id', async (req, res) => {
 router.post('/', protect, async (req, res) => {
   try {
     req.body.createdBy = req.user?.id;
-
     const lead = await Lead.create(req.body);
 
     // If lead is assigned to someone, create notification
     if (req.body.assignedTo && req.body.assignedTo !== req.user?.id) {
       const io = req.app.get('io');
-      
+
       const notification = await Notification.create({
         type: 'leadAssignment',
         message: `A new lead (${lead.name}) has been assigned to you`,
         recipient: req.body.assignedTo,
         relatedLead: lead._id
       });
-
       // Socket.io notification
       io.to(req.body.assignedTo).emit('notification', notification);
 
       // Firebase push notification
       try {
-        
-        
-       const assignedUser = await User.findById(req.body.assignedTo);
 
-if (assignedUser && assignedUser.fcmTokens.length > 0) {
-  const tokens = assignedUser.fcmTokens.map(t => t.token);
+        const assignedUser = await User.findById(req.body.assignedTo);
+        if (assignedUser && assignedUser.fcmTokens.length > 0) {
+          const tokens = assignedUser.fcmTokens.map(t => t.token);
+          const notificationPayload = {
+            title: 'New Lead Assigned',
+            body: `A new lead (${lead.name}) has been assigned to you`,
+            data: {
+              type: 'leadAssignment',
+              leadId: lead._id.toString(),
+              leadName: lead.name,
+              notificationId: notification._id.toString(),
+              url: `/leads/${lead._id}`   // 👈 useful for click
+            }
+          };
 
-  const notificationPayload = {
-    title: 'New Lead Assigned',
-    body: `A new lead (${lead.name}) has been assigned to you`,
-    data: {
-      type: 'leadAssignment',
-      leadId: lead._id.toString(),
-      leadName: lead.name,
-      notificationId: notification._id.toString(),
-      url: `/leads/${lead._id}`   // 👈 useful for click
-    }
-  };
+          const result = await sendNotification(
+            tokens,
+            notificationPayload.title,
+            notificationPayload.body,
+            notificationPayload.data
+          );
 
-  const result = await sendNotification(
-    tokens, 
-    notificationPayload.title, 
-    notificationPayload.body, 
-    notificationPayload.data
-  );
 
-  console.log('Firebase notification sent:', result);
-
-  // Remove failed tokens
-  if (result.failed?.length > 0) {
-    assignedUser.fcmTokens = assignedUser.fcmTokens.filter(
-      t => !result.failed.includes(t.token)
-    );
-    await assignedUser.save();
-  }
-} else {
-  console.log('No FCM tokens found for user:', req.body.assignedTo);
-}
+          // Remove failed tokens
+          if (result.failed?.length > 0) {
+            assignedUser.fcmTokens = assignedUser.fcmTokens.filter(
+              t => !result.failed.includes(t.token)
+            );
+            await assignedUser.save();
+          }
+        } else {
+          console.log('No FCM tokens found for user:', req.body.assignedTo);
+        }
 
       } catch (firebaseError) {
         console.error('Error sending Firebase notification:', firebaseError);
@@ -240,8 +234,8 @@ router.put('/:id', protect, async (req, res) => {
 
     // Make sure user is lead owner or admin
     if (
-      lead.assignedTo && 
-      lead.assignedTo.toString() !== req.user.id && 
+      lead.assignedTo &&
+      lead.assignedTo.toString() !== req.user.id &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
@@ -277,8 +271,8 @@ router.put('/:id', protect, async (req, res) => {
 
     // If assignment changed, create notification for new assignee
     if (
-      req.body.assignedTo && 
-      oldAssignedTo !== req.body.assignedTo && 
+      req.body.assignedTo &&
+      oldAssignedTo !== req.body.assignedTo &&
       req.body.assignedTo !== req.user.id
     ) {
       const notification = await Notification.create({
@@ -347,8 +341,8 @@ router.post('/:id/activities', protect, async (req, res) => {
 
     // Make sure user is lead owner or admin
     if (
-      lead.assignedTo && 
-      lead.assignedTo.toString() !== req.user.id && 
+      lead.assignedTo &&
+      lead.assignedTo.toString() !== req.user.id &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
@@ -370,7 +364,7 @@ router.post('/:id/activities', protect, async (req, res) => {
     // Create follow-up notification if activity is a follow-up
     if (req.body.type === 'follow-up' && req.body.dueDate) {
       const recipient = lead.assignedTo ? lead.assignedTo : req.user.id;
-      
+
       const notification = await Notification.create({
         type: 'followUp',
         message: `Follow-up for lead ${lead.name} is scheduled for ${new Date(req.body.dueDate).toLocaleDateString()}`,
