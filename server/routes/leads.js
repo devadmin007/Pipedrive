@@ -190,12 +190,12 @@ router.post('/', protect, async (req, res) => {
 
 
           // Remove failed tokens
-          if (result.failed?.length > 0) {
-            assignedUser.fcmTokens = assignedUser.fcmTokens.filter(
-              t => !result.failed.includes(t.token)
-            );
-            await assignedUser.save();
-          }
+          // if (result.failed?.length > 0) {
+          //   assignedUser.fcmTokens = assignedUser.fcmTokens.filter(
+          //     t => !result.failed.includes(t.token)
+          //   );
+          //   await assignedUser.save();
+          // }
         } else {
           console.log('No FCM tokens found for user:', req.body.assignedTo);
         }
@@ -221,6 +221,122 @@ router.post('/', protect, async (req, res) => {
 // @route   PUT /api/leads/:id
 // @desc    Update lead
 // @access  Private
+// router.put('/:id', protect, async (req, res) => {
+//   try {
+//     let lead = await Lead.findById(req.params.id);
+
+//     if (!lead) {
+//       return res.status(404).json({
+//         success: false,
+//         message: `No lead found with id of ${req.params.id}`
+//       });
+//     }
+
+//     // Make sure user is lead owner or admin
+//     if (
+//       lead.assignedTo &&
+//       lead.assignedTo.toString() !== req.user.id &&
+//       req.user.role !== 'admin'
+//     ) {
+//       return res.status(403).json({
+//         success: false,
+//         message: `User ${req.user.id} is not authorized to update this lead`
+//       });
+//     }
+
+//     const oldStatus = lead.status;
+//     const oldAssignedTo = lead.assignedTo ? lead.assignedTo.toString() : null;
+
+//     lead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
+//       new: true,
+//       runValidators: true
+//     });
+
+//     const io = req.app.get('io');
+
+//     // If status changed, create notification
+//     if (req.body.status && oldStatus !== req.body.status) {
+//       // Notify the assigned user about status change
+//       const assignedUser = await User.findById(lead.assignedTo);
+//       if (lead.assignedTo && lead.assignedTo.toString() !== req.user.id) {
+//         const tokens = assignedUser.fcmTokens.map(t => t.token);
+//         const notification = await Notification.create({
+//           type: 'leadUpdate',
+//           message: `Lead ${lead.name} status changed from ${oldStatus} to ${req.body.status}`,
+//           recipient: lead.assignedTo,
+//           relatedLead: lead._id
+//         });
+//         const notificationPayload = {
+//           title: 'Lead Status Updated',
+//           body: `Lead ${lead.name} status changed from ${oldStatus} to ${req.body.status}`,
+//           data: {
+//             type: 'leadAssignment',
+//             leadId: lead._id.toString(),
+//             leadName: lead.name,
+//             notificationId: notification._id.toString(),
+//             url: `/leads/${lead._id}`   // 👈 useful for click
+//           }
+//         };
+//         await sendNotification(
+//           tokens,
+//           notificationPayload.title,
+//           notificationPayload.body,
+//           notificationPayload.data
+//         );
+
+//         io.to(lead.assignedTo.toString()).emit('notification', notification);
+//       }
+//     }
+
+//     // If assignment changed, create notification for new assignee
+//     if (
+//       req.body.assignedTo &&
+//       oldAssignedTo !== req.body.assignedTo &&
+//       req.body.assignedTo !== req.user.id
+//     ) {
+//       const assignedUser = await User.findById(lead.assignedTo);
+//       const tokens = assignedUser.fcmTokens.map(t => t.token);
+
+
+//       const notification = await Notification.create({
+//         type: 'leadAssignment',
+//         message: `Lead ${lead.name} has been assigned to you`,
+//         recipient: req.body.assignedTo,
+//         relatedLead: lead._id
+//       });
+//       const notificationPayload = {
+//         title: 'Lead Assigned',
+//         body: `Lead ${lead.name} has been assigned to you`,
+//         data: {
+//           type: 'leadAssignment',
+//           leadId: lead._id.toString(),
+//           leadName: lead.name,
+//           notificationId: notification._id.toString(),
+//           url: `/leads/${lead._id}`   // 👈 useful for click
+//         }
+//       };
+//       await sendNotification(
+//         tokens,
+//         notificationPayload.title,
+//         notificationPayload.body,
+//         notificationPayload.data
+//       );
+
+//       io.to(req.body.assignedTo).emit('notification', notification);
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       data: lead
+//     });
+//   } catch (err) {
+//     res.status(500).json({
+//       success: false,
+//       message: err.message
+//     });
+//   }
+// });
+
 router.put('/:id', protect, async (req, res) => {
   try {
     let lead = await Lead.findById(req.params.id);
@@ -246,43 +362,110 @@ router.put('/:id', protect, async (req, res) => {
 
     const oldStatus = lead.status;
     const oldAssignedTo = lead.assignedTo ? lead.assignedTo.toString() : null;
+    const oldDealStage = lead.opportunity?.dealStage;
+    const oldProspectStatus = lead.prospect?.status;
 
-    lead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
+    // ---- Merge Nested Updates ----
+    if (req.body.suspect) {
+      lead.suspect = { ...lead.suspect?.toObject(), ...req.body.suspect };
+    }
+    if (req.body.prospect) {
+      lead.prospect = { ...lead.prospect?.toObject(), ...req.body.prospect };
+    }
+    if (req.body.leadQualified) {
+      lead.leadQualified = { ...lead.leadQualified?.toObject(), ...req.body.leadQualified };
+    }
+    if (req.body.opportunity) {
+      lead.opportunity = { ...lead.opportunity?.toObject(), ...req.body.opportunity };
+    }
+    if (req.body.deal) {
+      lead.deal = { ...lead.deal?.toObject(), ...req.body.deal };
+    }
+
+
+    // ---- Merge Top-Level Fields ----
+    const topLevelFields = [
+      'name', 'company', 'position', 'email', 'phone',
+      'value', 'status', 'notes', 'assignedTo'
+    ];
+    topLevelFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        lead[field] = req.body[field];
+      }
     });
+
+    lead.updatedAt = Date.now();
+    await lead.save();
 
     const io = req.app.get('io');
 
-    // If status changed, create notification
+    // ---- Notifications ----
+
+    // 1. Status change
     if (req.body.status && oldStatus !== req.body.status) {
-      // Notify the assigned user about status change
+      const assignedUser = await User.findById(lead.assignedTo);
       if (lead.assignedTo && lead.assignedTo.toString() !== req.user.id) {
+        const tokens = assignedUser.fcmTokens.map(t => t.token);
         const notification = await Notification.create({
           type: 'leadUpdate',
           message: `Lead ${lead.name} status changed from ${oldStatus} to ${req.body.status}`,
           recipient: lead.assignedTo,
           relatedLead: lead._id
         });
-
+        const payload = {
+          title: 'Lead Status Updated',
+          body: `Lead ${lead.name} status changed from ${oldStatus} to ${req.body.status}`,
+          data: {
+            type: 'leadUpdate',
+            leadId: lead._id.toString(),
+            leadName: lead.name,
+            notificationId: notification._id.toString(),
+            url: `/leads/${lead._id}`
+          }
+        };
+        await sendNotification(tokens, payload.title, payload.body, payload.data);
         io.to(lead.assignedTo.toString()).emit('notification', notification);
       }
     }
 
-    // If assignment changed, create notification for new assignee
+    // 2. Assignment change
     if (
       req.body.assignedTo &&
       oldAssignedTo !== req.body.assignedTo &&
       req.body.assignedTo !== req.user.id
     ) {
+      const assignedUser = await User.findById(lead.assignedTo);
+      const tokens = assignedUser.fcmTokens.map(t => t.token);
+
       const notification = await Notification.create({
         type: 'leadAssignment',
         message: `Lead ${lead.name} has been assigned to you`,
         recipient: req.body.assignedTo,
         relatedLead: lead._id
       });
-
+      const payload = {
+        title: 'Lead Assigned',
+        body: `Lead ${lead.name} has been assigned to you`,
+        data: {
+          type: 'leadAssignment',
+          leadId: lead._id.toString(),
+          leadName: lead.name,
+          notificationId: notification._id.toString(),
+          url: `/leads/${lead._id}`
+        }
+      };
+      await sendNotification(tokens, payload.title, payload.body, payload.data);
       io.to(req.body.assignedTo).emit('notification', notification);
+    }
+
+    // 3. Prospect status change (optional extra)
+    if (req.body.prospect?.status && oldProspectStatus !== req.body.prospect.status) {
+      // you can add a notification here if needed
+    }
+
+    // 4. Deal stage change (optional extra)
+    if (req.body.opportunity?.dealStage && oldDealStage !== req.body.opportunity.dealStage) {
+      // you can add a notification here if needed
     }
 
     res.status(200).json({
@@ -290,6 +473,7 @@ router.put('/:id', protect, async (req, res) => {
       data: lead
     });
   } catch (err) {
+    console.error("Update Lead Error:", err);
     res.status(500).json({
       success: false,
       message: err.message

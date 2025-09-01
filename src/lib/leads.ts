@@ -54,13 +54,14 @@ export interface LeadFormValues {
 }
 
 export const LEAD_STATUSES = [
-  'New Lead', 
-  'Contacted', 
-  'Qualified', 
-  'Proposal', 
-  'Negotiation', 
-  'Closed Won', 
-  'Closed Lost'
+  // 'New Lead', 
+  // 'Contacted', 
+  // 'Qualified', 
+  // 'Proposal', 
+  // 'Negotiation', 
+  // 'Closed Won', 
+  // 'Closed Lost',
+  'hot', 'warm', 'cold'
 ];
 
 export const ACTIVITY_TYPES = [
@@ -87,7 +88,7 @@ interface LeadsState {
     total: number;
     hasMore: boolean;
   };
-  
+
   fetchLeads: () => Promise<void>;
   fetchLead: (id: string) => Promise<void>;
   createLead: (leadData: LeadFormValues) => Promise<void>;
@@ -116,23 +117,23 @@ export const useLeadsStore = create<LeadsState>((set, get) => ({
     total: 0,
     hasMore: false,
   },
-  
+
   fetchLeads: async () => {
     const { filters, pagination } = get();
     const { status, assignedTo, search } = filters;
-    
+
     try {
       set({ loading: true, error: null });
-      
+
       let url = `/leads?page=${pagination.page}&limit=${pagination.limit}`;
-      
+
       if (status) url += `&status=${status}`;
       if (assignedTo) url += `&assignedTo=${assignedTo}`;
       if (search) url += `&search=${search}`;
-      
+
       const response = await api.get(url);
-      
-      set({ 
+
+      set({
         leads: response.data.data,
         pagination: {
           ...pagination,
@@ -142,133 +143,133 @@ export const useLeadsStore = create<LeadsState>((set, get) => ({
         loading: false
       });
     } catch (err: any) {
-      set({ 
-        error: err.response?.data?.message || 'Failed to fetch leads', 
+      set({
+        error: err.response?.data?.message || 'Failed to fetch leads',
         loading: false
       });
     }
   },
-  
+
   fetchLead: async (id: string) => {
     try {
       set({ loading: true, error: null });
       const response = await api.get(`/leads/${id}`);
       set({ currentLead: response.data.data, loading: false });
     } catch (err: any) {
-      set({ 
-        error: err.response?.data?.message || 'Failed to fetch lead', 
+      set({
+        error: err.response?.data?.message || 'Failed to fetch lead',
         loading: false
       });
     }
   },
-  
+
   createLead: async (leadData: LeadFormValues) => {
     try {
       set({ loading: true, error: null });
       const response = await api.post('/leads', leadData);
-      
+
       // Refresh leads list
       get().fetchLeads();
-      
+
       set({ loading: false });
       return response.data.data;
     } catch (err: any) {
-      set({ 
-        error: err.response?.data?.message || 'Failed to create lead', 
+      set({
+        error: err.response?.data?.message || 'Failed to create lead',
         loading: false
       });
       throw err;
     }
   },
-  
+
   updateLead: async (id: string, leadData: Partial<LeadFormValues>) => {
     try {
       set({ loading: true, error: null });
       const response = await api.put(`/leads/${id}`, leadData);
-      
+
       // Update current lead if it's the one being edited
       const { currentLead } = get();
       if (currentLead && currentLead._id === id) {
         set({ currentLead: response.data.data });
       }
-      
+
       // Refresh leads list
       get().fetchLeads();
-      
+
       set({ loading: false });
       return response.data.data;
     } catch (err: any) {
-      set({ 
-        error: err.response?.data?.message || 'Failed to update lead', 
+      set({
+        error: err.response?.data?.message || 'Failed to update lead',
         loading: false
       });
       throw err;
     }
   },
-  
+
   deleteLead: async (id: string) => {
     try {
       set({ loading: true, error: null });
       await api.delete(`/leads/${id}`);
-      
+
       // Refresh leads list
       get().fetchLeads();
-      
+
       // Clear current lead if it's the one being deleted
       const { currentLead } = get();
       if (currentLead && currentLead._id === id) {
         set({ currentLead: null });
       }
-      
+
       set({ loading: false });
     } catch (err: any) {
-      set({ 
-        error: err.response?.data?.message || 'Failed to delete lead', 
+      set({
+        error: err.response?.data?.message || 'Failed to delete lead',
         loading: false
       });
       throw err;
     }
   },
-  
+
   addActivity: async (leadId: string, activityData: any) => {
     try {
       set({ loading: true, error: null });
       const response = await api.post(`/leads/${leadId}/activities`, activityData);
-      
+
       // Update current lead with new activity
       const { currentLead } = get();
       if (currentLead && currentLead._id === leadId) {
         set({ currentLead: response.data.data });
       }
-      
+
       set({ loading: false });
       return response.data.data;
     } catch (err: any) {
-      set({ 
-        error: err.response?.data?.message || 'Failed to add activity', 
+      set({
+        error: err.response?.data?.message || 'Failed to add activity',
         loading: false
       });
       throw err;
     }
   },
-  
+
   updateLeadStatus: async (id: string, status: string) => {
     return get().updateLead(id, { status });
   },
-  
+
   setFilters: (filters: Partial<LeadsState['filters']>) => {
-    set(state => ({ 
+    set(state => ({
       filters: { ...state.filters, ...filters },
       pagination: { ...state.pagination, page: 1 } // Reset to page 1 when filters change
     }));
     get().fetchLeads();
   },
-  
+
   setPage: (page: number) => {
     set(state => ({ pagination: { ...state.pagination, page } }));
     get().fetchLeads();
   },
-  
+
   clearCurrentLead: () => {
     set({ currentLead: null });
   }
