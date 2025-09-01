@@ -37,7 +37,7 @@ const INTERESTED_SERVICES = ['mvp', 'website', 'app', 'dedicated developer', 'ui
 const DEAL_STAGES = ['proposal_sent', 'negotiation', 'verbal_commit', 'legal/procurement', 'closed_won', 'closed_lost'];
 
 const SuspectSchema = new mongoose.Schema({
-  leadSource: { type: String, enum: LEAD_SOURCES, required: true },
+  leadSource: { type: String, enum: LEAD_SOURCES, required: false },
   otherPortalName: { type: String, trim: true }, // when leadSource === 'OtherPortal'
   jobUrl: {
     type: String,
@@ -47,7 +47,7 @@ const SuspectSchema = new mongoose.Schema({
 }, { _id: false });
 
 const ProspectSchema = new mongoose.Schema({
-  status: { type: String, enum: PROSPECT_STATUSES, required: true },
+  status: { type: String, enum: PROSPECT_STATUSES, required: false },
   lastContactedAt: { type: Date },
   notes: { type: String, trim: true }
 }, { _id: false });
@@ -74,7 +74,7 @@ const DealSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Won', 'Lost'],
-    required: true
+    required: false
   },
 
   // Fields when deal is WON

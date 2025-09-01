@@ -22,6 +22,7 @@ export interface Lead {
     email: string;
   };
   activities: Activity[];
+  currentStage: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,14 +55,13 @@ export interface LeadFormValues {
 }
 
 export const LEAD_STATUSES = [
-  // 'New Lead', 
-  // 'Contacted', 
-  // 'Qualified', 
-  // 'Proposal', 
-  // 'Negotiation', 
-  // 'Closed Won', 
-  // 'Closed Lost',
-  'hot', 'warm', 'cold'
+  'Suspect', 
+  'Contacted', 
+  'Qualified', 
+  'Proposal', 
+  'Negotiation', 
+  'Closed Won', 
+  'Closed Lost',
 ];
 
 export const ACTIVITY_TYPES = [

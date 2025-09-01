@@ -6,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LEAD_STATUSES, useLeadsStore } from '@/lib/leads';
+import { useLeadsStore } from '@/lib/leads';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
+const LEAD_STATUSES = ['Hot', 'Cold', 'Warm']
 export default function LeadCreatePage() {
   const navigate = useNavigate();
   const { createLead } = useLeadsStore();
