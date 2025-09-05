@@ -34,11 +34,13 @@ export default function LeadDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuthCheck();
   const { currentLead, loading, error, fetchLead, updateLead, deleteLead, addActivity } = useLeadsStore();
+  console.log(currentLead, "current lead")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [salesReps, setSalesReps] = useState([]);
   const [loadingReps, setLoadingReps] = useState(false);
+  console.log(currentLead,"current lead")
 
   // Form states
   const [editForm, setEditForm] = useState({
@@ -353,6 +355,130 @@ export default function LeadDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Lead Lifecycle</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="suspect">
+            <TabsList>
+              <TabsTrigger value="suspect">Suspect</TabsTrigger>
+              <TabsTrigger value="prospect">Prospect</TabsTrigger>
+              <TabsTrigger value="qualified">Qualified</TabsTrigger>
+              <TabsTrigger value="opportunity">Opportunity</TabsTrigger>
+              <TabsTrigger value="deal">Deal</TabsTrigger>
+            </TabsList>
+
+            {/* Suspect */}
+            <TabsContent value="suspect">
+  {currentLead?.suspect && (currentLead.suspect.otherPortalName || currentLead.suspect.jobUrl) ? (
+    <div className="space-y-2">
+      {currentLead.suspect.otherPortalName && (
+        <p><b>Other Portal Name:</b> {currentLead.suspect.otherPortalName}</p>
+      )}
+      {currentLead.suspect.jobUrl && (
+        <a
+          href={currentLead.suspect.jobUrl}
+          target="_blank"
+          className="text-blue-500 underline"
+        >
+          View Job Post
+        </a>
+      )}
+    </div>
+  ) : (
+    <p className="text-muted-foreground text-sm">No suspect info yet</p>
+  )}
+</TabsContent>
+
+            {/* Prospect */}
+            <TabsContent value="prospect">
+              {currentLead?.prospect ? (
+                <div className="space-y-2">
+                  <p><b>Status:</b> {currentLead.prospect.status}</p>
+                  {currentLead.prospect.lastContactedAt && (
+                    <p><b>Last Contacted:</b> {format(new Date(currentLead.prospect.lastContactedAt), "MMM dd, yyyy")}</p>
+                  )}
+                  {currentLead.prospect.notes && <p><b>Notes:</b> {currentLead.prospect.notes}</p>}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No prospect info yet</p>
+              )}
+            </TabsContent>
+
+            {/* Qualified */}
+            <TabsContent value="qualified">
+              {currentLead?.leadQualified ? (
+                <div className="space-y-2">
+                  {currentLead.leadQualified.budgetApprox && (
+                    <p><b>Budget Approx:</b> {currentLead.leadQualified.budgetApprox}</p>
+                  )}
+                  {currentLead.leadQualified.budgetCurrency && <p><b>Budget Currency:</b> {currentLead.leadQualified.budgetCurrency}</p>}
+                  {currentLead.leadQualified.timelineApprox && <p><b>Timeline Approx:</b> {currentLead.leadQualified.timelineApprox}</p>}
+                  {currentLead.leadQualified.meetingScheduled && <p><b>Meeting Scheduled:</b> {currentLead.leadQualified.meetingScheduled}</p>}
+                  {currentLead.leadQualified.meetingDate && <p><b>Meeting Date:</b> {format(new Date(currentLead.leadQualified.meetingDate), "MMM dd, yyyy")}</p>}
+                  {currentLead.leadQualified.notes && <p><b>Notes:</b> {currentLead.leadQualified.notes}</p>}
+                  {currentLead.leadQualified.interestedServices && <p><b>Interested Services:</b> {currentLead.leadQualified.interestedServices.map((service) => service).join(', ')}</p>}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No qualification info yet</p>
+              )}
+            </TabsContent>
+
+            {/* Opportunity */}
+            <TabsContent value="opportunity">
+              {currentLead?.opportunity ? (
+                <div className="space-y-2">
+                  {currentLead.opportunity.budgetAmount && (
+                    <p><b>Budget:</b> {currentLead.opportunity.budgetCurrency} {currentLead.opportunity.budgetAmount}</p>
+                  )}
+                 {currentLead.opportunity.customRequirements && (
+                    <p><b>Custom Requirements:</b> {currentLead.opportunity.customRequirements}</p>
+                  )}
+                  {currentLead.opportunity.dealStage && <p><b>Deal Stage:</b> {currentLead.opportunity.dealStage}</p>}
+                  {currentLead.opportunity.customRequirements && <p><b>Custom Requirements:</b> {currentLead.opportunity.customRequirements}</p>}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No opportunity info yet</p>
+              )}
+            </TabsContent>
+
+            {/* Deal */}
+            <TabsContent value="deal">
+              {currentLead?.deal ? (
+                <div className="space-y-2">
+                  <p><b>Status:</b> {currentLead.deal.status}</p>
+                  {currentLead.deal.finalDealValue && (
+                    <p><b>Final Value:</b> {currentLead.deal.finalDealCurrency} {currentLead.deal.finalDealValue}</p>
+                  )}
+                  {currentLead.deal.serviceTypeSold && (
+                    <p><b>Service Type Sold:</b> {currentLead.deal.serviceTypeSold}</p>
+                  )}
+                  {currentLead.deal.projectStartDate && (
+                    <p><b>Project Start Date:</b> {format(new Date(currentLead.deal.projectStartDate), "MMM dd, yyyy")}</p>
+                  )}
+                  {currentLead.deal.closedAt && (
+                    <p><b>Closed On:</b> {format(new Date(currentLead.deal.closedAt), "MMM dd, yyyy")}</p>
+                  )}
+                  {currentLead.deal.otherNotes && (
+                    <p><b>Other Notes:</b> {currentLead.deal.otherNotes}</p>
+                  )}
+                  {currentLead.deal.reasonLost && (
+                    <p><b>Reason Lost:</b> {currentLead.deal.reasonLost}</p>
+                  )}
+                  {currentLead.deal.otherNotes && (
+                    <p><b>Other Notes:</b> {currentLead.deal.otherNotes}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No deal info yet</p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
 
       {/* Edit Lead Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

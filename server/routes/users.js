@@ -6,9 +6,9 @@ const { protect, authorize } = require('../middleware/auth');
 // @route   GET /api/users
 // @desc    Get all users
 // @access  Private/Admin
-router.post("/fcm-token", async (req, res) => {
+router.post("/fcm-token", protect, async (req, res) => {
   try {
-    const user = await User.findById('68a5638080ea92dc70051f11');
+    const user = await User.findById(req.user?.id);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }

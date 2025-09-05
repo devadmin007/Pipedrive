@@ -16,7 +16,6 @@ const app = initializeApp(firebaseConfig);
 // ✅ Export messaging instance
 export const messaging = getMessaging(app);
 
-
 export const requestNotificationPermission = async () => {
   try {
     console.log("🔍 Current permission:", Notification.permission);
@@ -43,7 +42,7 @@ export const requestNotificationPermission = async () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}` // your auth token
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("auth-storage"))?.state?.token}` // your auth token
         },
         body: JSON.stringify({ token, deviceInfo: navigator.userAgent }),
       });

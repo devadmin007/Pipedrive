@@ -25,6 +25,53 @@ export interface Lead {
   currentStage: string;
   createdAt: string;
   updatedAt: string;
+  suspect: {
+    leadSource: string;
+    otherPortalName: string;
+    jobUrl: string;
+    jobTitle: string;
+    jobDescription: string;
+    jobLocation: string;
+    jobType: string;
+    jobSalary: string;
+    jobExperience: string;
+    jobSkills: string;
+    jobRequirements: string;
+    jobBenefits: string;
+    jobStatus: string;
+  };
+  prospect: {
+    notes: string;
+    lastContactedAt: string;
+    status: string;
+  };
+  leadQualified: {
+    status: string;
+    budgetApprox: string;
+    budgetCurrency: string;
+    timelineApprox: string;
+    meetingScheduled: boolean;
+    meetingDate: string;
+    interestedServices: string[];
+    notes: string;
+  };
+  opportunity: {
+    expectedCloseDate: any;
+    budgetCurrency: any;
+    budgetAmount: any;
+    dealStage: string;
+    customRequirements: string;
+  };
+  deal: {
+    closedAt: any;
+    finalDealCurrency: any;
+    finalDealValue: any;
+    status: string;
+    serviceTypeSold: string;
+    projectStartDate: string;
+    reasonLost: string;
+    otherNotes: string;
+  };
 }
 
 export interface Activity {
@@ -42,6 +89,8 @@ export interface Activity {
   createdAt: string;
 }
 
+
+
 export interface LeadFormValues {
   name: string;
   company: string;
@@ -52,6 +101,32 @@ export interface LeadFormValues {
   status: string;
   notes: string;
   assignedTo: string | null;
+  suspect: {
+    leadSource: string;
+    otherPortalName: string;
+    jobUrl: string;
+    jobTitle: string;
+    jobDescription: string;
+    jobLocation: string;
+    jobType: string;
+    jobSalary: string;
+    jobExperience: string;
+    jobSkills: string;
+    jobRequirements: string;
+    jobBenefits: string;
+    jobStatus: string;
+  };
+  prospect: {
+  };
+  leadQualified: {
+    status: string;
+  };
+  opportunity: {
+    dealStage: string;
+  };
+  deal: {
+    status: string;
+  };
 }
 
 export const LEAD_STATUSES = [

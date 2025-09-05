@@ -117,7 +117,7 @@ export default function KanbanBoard() {
             setSelectedLead(null);
           }}
           onSave={handlePopupSave}
-          initialData={selectedLead} // ✅ Pass the initial data to pre-fill the form
+          initialData={selectedLead}
         />
       )}
     </div>

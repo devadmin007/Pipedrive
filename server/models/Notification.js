@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const NotificationSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['leadUpdate', 'leadAssignment', 'followUp'],
+    enum: ['leadUpdate', 'leadAssignment', 'followUp', 'activity'],
     required: true
   },
   message: {

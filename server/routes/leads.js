@@ -64,7 +64,12 @@ router.get('/', protect, async (req, res) => {
     query = query.populate([
       { path: 'assignedTo', select: 'name email' },
       { path: 'createdBy', select: 'name email' },
-      { path: 'activities.createdBy', select: 'name email' }
+      { path: 'activities.createdBy', select: 'name email' },
+      { path: 'suspect', select: 'leadSource jobTitle jobLocation jobUrl jobDescription jobType jobSalary jobExperience jobSkills jobRequirements jobBenefits jobStatus' },
+      { path: 'prospect', select: 'status lastContactedAt notes' },
+      { path: 'leadQualified', select: 'status' },
+      { path: 'opportunity', select: 'dealStage expectedCloseDate budgetAmount budgetCurrency' },
+      { path: 'deal', select: 'status finalDealValue finalDealCurrency closedAt' }
     ]);
 
     // Executing query
@@ -109,9 +114,24 @@ router.get('/:id', async (req, res) => {
     const lead = await Lead.findById(req.params.id).populate([
       { path: 'assignedTo', select: 'name email' },
       { path: 'createdBy', select: 'name email' },
-      { path: 'activities.createdBy', select: 'name email' }
-    ]);
-
+      { path: 'activities.createdBy', select: 'name email' },
+      // { path: 'suspect', select: 'leadSource jobTitle jobLocation jobUrl jobDescription jobType jobSalary jobExperience jobSkills jobRequirements jobBenefits jobStatus' },
+      // { path: 'prospect', select: 'status lastContactedAt notes' },
+      // { path: 'leadQualified', select: 'status' },
+      // { path: 'opportunity', select: 'dealStage expectedCloseDate budgetAmount budgetCurrency' },
+      // { path: 'deal', select: 'status finalDealValue finalDealCurrency closedAt' }
+    ]); 
+    const formattedLead = {
+      ...lead.toObject(),
+      suspect: lead.suspect || {},
+      prospect: lead.prospect || {},
+      leadQualified: lead.leadQualified || {},
+      opportunity: lead.opportunity || {},
+      deal: lead.deal || {}
+    };
+    
+    res.status(200).json({ success: true, data: formattedLead });
+    
     if (!lead) {
       return res.status(404).json({
         success: false,
@@ -130,10 +150,10 @@ router.get('/:id', async (req, res) => {
     //   });
     // }
 
-    res.status(200).json({
-      success: true,
-      data: lead
-    });
+    // res.status(200).json({
+    //   success: true,
+    //   data: lead
+    // });
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -458,14 +478,10 @@ router.put('/:id', protect, async (req, res) => {
       io.to(req.body.assignedTo).emit('notification', notification);
     }
 
-    // 3. Prospect status change (optional extra)
     if (req.body.prospect?.status && oldProspectStatus !== req.body.prospect.status) {
-      // you can add a notification here if needed
     }
 
-    // 4. Deal stage change (optional extra)
     if (req.body.opportunity?.dealStage && oldDealStage !== req.body.opportunity.dealStage) {
-      // you can add a notification here if needed
     }
 
     res.status(200).json({
@@ -512,6 +528,9 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
 // @route   POST /api/leads/:id/activities
 // @desc    Add activity to lead
 // @access  Private
+// @route   POST /api/leads/:id/activities
+// @desc    Add activity to lead
+// @access  Private
 router.post('/:id/activities', protect, async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
@@ -545,31 +564,72 @@ router.post('/:id/activities', protect, async (req, res) => {
 
     const io = req.app.get('io');
 
-    // Create follow-up notification if activity is a follow-up
-    if (req.body.type === 'follow-up' && req.body.dueDate) {
-      const recipient = lead.assignedTo ? lead.assignedTo : req.user.id;
+    const recipient = lead.assignedTo ? lead.assignedTo : req.user.id;
 
-      const notification = await Notification.create({
-        type: 'followUp',
-        message: `Follow-up for lead ${lead.name} is scheduled for ${new Date(req.body.dueDate).toLocaleDateString()}`,
-        recipient,
-        relatedLead: lead._id
-      });
+    // ---- Create Notification ----
+    const notification = await Notification.create({
+      type: 'activity',
+      message: `A new activity (${req.body.type}) was added to lead ${lead.name}`,
+      recipient,
+      relatedLead: lead._id
+    });
 
-      io.to(recipient.toString()).emit('notification', notification);
-    }
+    // ---- Socket.io ----
+    io.to(recipient.toString()).emit('notification', notification);
+
+    // ---- Firebase Push Notification ----
+try {
+  const assignedUser = await User.findById(recipient);
+
+  if (assignedUser && assignedUser.fcmTokens.length > 0) {
+    const tokens = assignedUser.fcmTokens.map(t => t.token);
+
+    const payload = {
+      title: 'New Activity Added',
+      body: `Activity (${req.body.type}) was added to lead ${lead.name}`,
+      data: {
+        type: 'activity',
+        leadId: lead._id.toString(),
+        leadName: lead.name,
+        activityType: req.body.type,
+        notificationId: notification._id.toString(),
+        url: `/leads/${lead._id}`
+      }
+    };
+
+    const result = await sendNotification(
+      tokens,
+      payload.title,
+      payload.body,
+      payload.data
+    );
+
+    console.log(
+      `✅ Firebase notification sent successfully to user ${recipient} for lead ${lead._id}. Result:`,
+      result
+    );
+  } else {
+    console.log('⚠️ No FCM tokens found for user:', recipient);
+  }
+} catch (firebaseError) {
+  console.error('❌ Error sending Firebase notification:', firebaseError);
+  // Don't block request on Firebase error
+}
+
 
     res.status(200).json({
       success: true,
       data: lead
     });
   } catch (err) {
+    console.error("Add Activity Error:", err);
     res.status(500).json({
       success: false,
       message: err.message
     });
   }
 });
+
 
 // Add this to your notifications router
 

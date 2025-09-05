@@ -27,6 +27,33 @@ export default function LeadCreatePage() {
     status: 'New Lead',
     notes: '',
     assignedTo: '',
+    suspect: {
+      leadSource: '',
+      otherPortalName: '',
+      jobUrl: '',
+      jobTitle: '',
+      jobDescription: '',
+      jobLocation: '',
+      jobType: '',
+      jobSalary: '',
+      jobExperience: '',
+      jobSkills: '',
+      jobRequirements: '',
+      jobBenefits: '',
+      jobStatus: '',
+    },
+    prospect: {
+      status: '',
+    },
+    leadQualified: {
+      status: '',
+    },
+    opportunity: {
+      dealStage: '',
+    },
+    deal: {
+      status: '',
+    },
   });
 
   useEffect(() => {

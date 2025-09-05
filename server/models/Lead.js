@@ -130,7 +130,7 @@ const LeadSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['warm', 'hot', 'cold'],
+    enum: ['warm', 'hot', 'cold','prospect','qualified','proposal','negotiation','closed_won','closed_lost', 'opportunity','deal'],
     default: 'cold'
     // enum: ['New Lead', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'],
     // default: 'New Lead'
@@ -143,6 +143,7 @@ const LeadSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'User'
   },
+  
   createdBy: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
