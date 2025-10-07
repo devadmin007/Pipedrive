@@ -39,7 +39,7 @@ export const requestNotificationPermission = async () => {
       console.log("✅ FCM Token:", token);
     
       // Save token to backend
-      await fetch("http://localhost:5000/api/users/fcm-token", {
+      await fetch("http://89.116.34.232:5000/api/users/fcm-token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
