@@ -99,9 +99,9 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button onClick={() => navigate('/leads')}>
+        {/* <Button onClick={() => navigate('/leads')}>
           <UserPlus className="mr-2 h-4 w-4" /> Add New Lead
-        </Button>
+        </Button> */}
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

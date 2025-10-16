@@ -1,20 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link, Outlet, NavLink } from 'react-router-dom';
-import { useAuthCheck, useAuthStore } from '@/lib/auth';
-import { Bell, Home, Users, User2, LogOut, BarChart3, ChevronDown, Menu, X, UserPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useIsMobile } from '@/hooks/use-mobile';
-import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { useNavigate, Link, Outlet, NavLink } from "react-router-dom";
+import { useAuthCheck, useAuthStore } from "@/lib/auth";
+import { Bell, Home, Users, User2, LogOut, BarChart3, ChevronDown, Menu, X, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import NotificationsDropdown from "@/components/notifications/NotificationsDropdown";
+import { cn } from "@/lib/utils";
+import { CheckSquare } from "lucide-react";
 
 export default function DashboardLayout() {
   const { isAuthenticated, user } = useAuthCheck();
@@ -25,7 +21,7 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [isAuthenticated, navigate]);
 
@@ -34,31 +30,22 @@ export default function DashboardLayout() {
   }
 
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Leads', href: '/leads', icon: BarChart3 },
-    ...(user.role === 'admin' ? [{ name: 'Users', href: '/users', icon: Users }] : []),
-    { name: 'Profile', href: '/profile', icon: User2 },
+    { name: "Dashboard", href: "/dashboard", icon: Home },
+    { name: "Leads", href: "/leads", icon: BarChart3 },
+    { name: "Tasks", href: "/tasks", icon: CheckSquare },
+    ...(user.role === "admin" ? [{ name: "Users", href: "/users", icon: Users }] : []),
+    // { name: 'Profile', href: '/profile', icon: User2 },
   ];
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const NavItems = () => (
     <>
       {navItems.map((item) => (
-        <NavLink
-          key={item.name}
-          to={item.href}
-          className={({ isActive }: { isActive: boolean }) =>
-            cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent',
-              isActive ? 'bg-accent text-accent-foreground' : 'transparent'
-            )
-          }
-          onClick={() => setOpen(false)}
-        >
+        <NavLink key={item.name} to={item.href} className={({ isActive }: { isActive: boolean }) => cn("flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent", isActive ? "bg-accent text-accent-foreground" : "transparent")} onClick={() => setOpen(false)}>
           <item.icon className="h-5 w-5" />
           <span>{item.name}</span>
         </NavLink>
@@ -101,9 +88,7 @@ export default function DashboardLayout() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 flex items-center gap-2 px-1.5">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    {user.name.charAt(0)}
-                  </AvatarFallback>
+                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col">
                   <p className="text-sm font-medium leading-none">{user.name}</p>
@@ -116,9 +101,7 @@ export default function DashboardLayout() {
               <DropdownMenuItem asChild>
                 <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>
-                Logout
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -128,10 +111,10 @@ export default function DashboardLayout() {
           <aside className="fixed left-0 top-16 z-20 hidden h-[calc(100vh-4rem)] w-64 flex-col overflow-y-auto border-r bg-background px-4 py-6 sm:flex">
             <div className="flex flex-col gap-2">
               <NavItems />
-              <Button onClick={handleLogout} variant="ghost" className="mt-auto flex items-center gap-3 px-3 justify-start">
+              {/* <Button onClick={handleLogout} variant="ghost" className="mt-auto flex items-center gap-3 px-3 justify-start">
                 <LogOut className="h-5 w-5" />
                 <span>Logout</span>
-              </Button>
+              </Button> */}
             </div>
           </aside>
         )}
