@@ -119,13 +119,13 @@ export default function LeadsPage() {
   };
 
   const handleEdit = (lead: any) => {
-  setForm({
-    ...lead,
-    assignedTo: lead.assignedTo?._id || "", 
-  });
-  setIsEditing(true);
-  setIsDialogOpen(true);
-};
+    setForm({
+      ...lead,
+      assignedTo: lead.assignedTo?._id || "",
+    });
+    setIsEditing(true);
+    setIsDialogOpen(true);
+  };
 
   // const handleDelete = async (leadId: string) => {
   //   if (confirm("Are you sure you want to delete this lead?")) {
@@ -374,11 +374,35 @@ export default function LeadsPage() {
                 </div>
               )}
 
+              
               <div className="space-y-2">
                 <Label htmlFor="jobUrl">URL</Label>
                 <Input id="jobUrl" placeholder="https://example.com/job" value={form.suspect.jobUrl} onChange={(e) => handleChange("suspect.jobUrl", e.target.value)} />
               </div>
             </div>
+            {form.suspect.leadSource === "linkedin" && (
+                <div className="space-y-2">
+                  <Label htmlFor="leadSourceName">LinkedIn Lead Name</Label>
+                  <Select
+                    value={form.suspect.leadSourceName || ""}
+                    onValueChange={(value) =>
+                      handleChange("suspect.leadSourceName", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select LinkedIn lead" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Parth">Parth</SelectItem>
+                      <SelectItem value="Foram">Foram</SelectItem>
+                      <SelectItem value="Harsha">Harsha</SelectItem>
+                      <SelectItem value="Dhaval">Dhaval</SelectItem>
+                      <SelectItem value="Bhargav">Bhargav</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -419,6 +443,9 @@ export default function LeadsPage() {
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
+                rows={2}
+                className="resize-none"
+                placeholder="Enter notes"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
