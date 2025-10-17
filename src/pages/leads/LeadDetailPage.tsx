@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useLeadsStore, ACTIVITY_TYPES } from "@/lib/leads";
 import { useAuthCheck } from "@/lib/auth";
-import { ArrowLeft, Edit, Trash2, UserPlus, Mail, Phone, Building, AlertCircle, Plus, DollarSign, Pencil, Trash } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, UserPlus, Mail, Phone, Building, AlertCircle, Plus, DollarSign, Pencil, Trash, Box } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -227,13 +227,13 @@ export default function LeadDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className={currentLead.status === "New Lead" ? "bg-blue-500" : currentLead.status === "Contacted" ? "bg-purple-500" : currentLead.status === "Qualified" ? "bg-cyan-500" : currentLead.status === "Proposal" ? "bg-amber-500" : currentLead.status === "Negotiation" ? "bg-orange-500" : currentLead.status === "Closed Won" ? "bg-green-500" : "bg-red-500"}>{currentLead.status}</Badge>
+          {/* <Badge className={currentLead.status === "New Lead" ? "bg-blue-500" : currentLead.status === "Contacted" ? "bg-purple-500" : currentLead.status === "Qualified" ? "bg-cyan-500" : currentLead.status === "Proposal" ? "bg-amber-500" : currentLead.status === "Negotiation" ? "bg-orange-500" : currentLead.status === "Closed Won" ? "bg-green-500" : "bg-red-500"}>{currentLead.status}</Badge> */}
 
-          <Button size="sm" variant="outline" onClick={() => setIsEditDialogOpen(true)}>
+          {/* <Button size="sm" variant="outline" onClick={() => setIsEditDialogOpen(true)}>
             <Edit className="h-4 w-4 mr-1" /> Edit Lead
-          </Button>
+          </Button> */}
 
-          <Button
+          {/* <Button
             size="sm"
             variant="outline"
             onClick={() => {
@@ -247,15 +247,16 @@ export default function LeadDetailPage() {
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Activity
-          </Button>
+          </Button> */}
 
           {user?.role === "admin" && (
             <Button
               size="sm"
               variant="destructive"
               onClick={() => {
-                setCurrentActivity(null); // adding new activity
-                setIsActivityDialogOpen(true);
+                // setCurrentActivity(null); // adding new activity
+                // setIsActivityDialogOpen(true);
+                setIsDeleteDialogOpen(true)
               }}
             >
               <Trash2 className="h-4 w-4 mr-1" /> Delete
@@ -267,7 +268,10 @@ export default function LeadDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Lead Details</CardTitle>
+            <div className="flex justify-between">
+              <CardTitle className="text-lg">Lead Details</CardTitle>
+              <Badge className={currentLead.status === "New Lead" ? "bg-blue-500" : currentLead.status === "Contacted" ? "bg-purple-500" : currentLead.status === "Qualified" ? "bg-cyan-500" : currentLead.status === "Proposal" ? "bg-amber-500" : currentLead.status === "Negotiation" ? "bg-orange-500" : currentLead.status === "Closed Won" ? "bg-green-500" : "bg-red-500"}>{currentLead.status}</Badge>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -360,6 +364,7 @@ export default function LeadDetailPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Activities</CardTitle>
+               {currentLead.activities.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
@@ -374,7 +379,7 @@ export default function LeadDetailPage() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-1" /> Add Activity
-              </Button>
+              </Button>)}
             </div>
           </CardHeader>
           <CardContent>
